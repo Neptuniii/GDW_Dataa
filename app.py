@@ -1,17 +1,6 @@
 import streamlit as st
 import pandas as pd
 
-st.markdown("""
-    <style>
-        .css-1d391kg {  /* class của table cell */
-            font-size: 20px !important;
-        }
-        .css-1v0mbdj {  /* class của table header */
-            font-size: 20px !important;
-        }
-    </style>
-""", unsafe_allow_html=True)
-
 df = pd.read_csv("naphaluancod_2025-07-16.csv", usecols=[
     'governor_id', 'governor_name', 'power', 'units_killed', 'tier_1_kills', 'tier_2_kills', 'tier_3_kills', 'tier_4_kills', 'tier_5_kills', 'gold_spent', 'wood_spent', 'stone_spent', 'mana_spent', 'gems_spent'
 ])
@@ -20,7 +9,6 @@ df = df.rename(columns={
     'governor_id': 'ID',
     'governor_name': 'Name',
     'power': 'Power',
-    'kill_points': 'Kill point',
     'units_killed': 'Total kill',
     'tier_1_kills': 'T1 kill',
     'tier_2_kills': 'T2 kill',
@@ -33,6 +21,10 @@ df = df.rename(columns={
     'mana_spent': 'Mana spent',
     'gems_spent': 'Gem spent'
 })
+
+cols_format = ['Power', 'Total kill', 'T1 kill', 'T2 kill', 'T3 kill', 'T4 kill', 'T5 kill', 'Gold spent', 'Wood spent', 'Stone spent', 'Mana spent', 'Gem spent']
+df[cols_format] = df[cols_format].apply(pd.to_numeric, errors='coerce')
+df[cols_format] = df[cols_format].applymap(lambda x: f"{x:,.0f}")
 
 st.set_page_config(layout="wide")
 st.title("By Neptuniii")
