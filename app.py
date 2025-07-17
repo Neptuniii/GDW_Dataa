@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+from st_aggrid import AgGrid, GridOptionsBuilder
 
 df = pd.read_csv("naphaluancod_2025-07-16.csv", usecols=[
     'governor_id', 'governor_name', 'power', 'units_killed', 'tier_1_kills', 'tier_2_kills', 'tier_3_kills', 'tier_4_kills', 'tier_5_kills', 'gold_spent', 'wood_spent', 'stone_spent', 'mana_spent', 'gems_spent'
@@ -25,6 +26,7 @@ df = df.rename(columns={
 
 
 st.set_page_config(layout="wide")
+st.title("GDW Data ")
 st.title("By Neptuniii")
 
 search = st.text_input("Tìm theo ID hoặc Tên:")
@@ -38,7 +40,25 @@ if search:
 else:
     filtered_df = df
 
-st.dataframe(filtered_df, height=800, use_container_width=True)
+filtered_df = filtered_df.reset_index(drop=True)
+filtered_df.index = filtered_df.index + 1
+
+# Format bằng AgGrid
+gb = GridOptionsBuilder.from_dataframe(filtered_df)
+columns_to_format = [
+    'Power', 'Total kill', 'T1 kill', 'T2 kill', 'T3 kill', 'T4 kill', 'T5 kill',
+    'Gold spent', 'Wood spent', 'Stone spent', 'Mana spent', 'Gem spent'
+]
+for col in columns_to_format:
+    gb.configure_column(col, type=["numericColumn", "numberColumnFilter", "customNumericFormat"],
+                        precision=0, valueFormatter="x.toLocaleString()")
+
+gridOptions = gb.build()
+
+AgGrid(filtered_df, gridOptions=gridOptions, height=600, fit_columns_on_grid_load=True)
+
+
+
 
 
 
