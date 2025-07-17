@@ -22,9 +22,7 @@ df = df.rename(columns={
     'gems_spent': 'Gem spent'
 })
 
-cols_format = ['Power', 'Total kill', 'T1 kill', 'T2 kill', 'T3 kill', 'T4 kill', 'T5 kill', 'Gold spent', 'Wood spent', 'Stone spent', 'Mana spent', 'Gem spent']
-df[cols_format] = df[cols_format].apply(pd.to_numeric, errors='coerce')
-df[cols_format] = df[cols_format].applymap(lambda x: f"{x:,.0f}")
+
 
 st.set_page_config(layout="wide")
 st.title("By Neptuniii")
