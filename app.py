@@ -1,7 +1,5 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
 
 df = pd.read_csv("naphaluancod_2025-07-16.csv", usecols=[
     'governor_id', 'governor_name', 'power', 'units_killed', 'tier_1_kills', 'tier_2_kills', 'tier_3_kills', 'tier_4_kills', 'tier_5_kills', 'gold_spent', 'wood_spent', 'stone_spent', 'mana_spent', 'gems_spent'
