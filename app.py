@@ -44,7 +44,7 @@ df = df[cols_order]
 
 # Giao diện Streamlit
 st.set_page_config(layout="wide")
-st.title("GDW Data ")
+st.title("GDW Data – Latest Update: 16/7/2025")
 st.title("By Neptuniii")
 
 search = st.text_input("Tìm theo ID hoặc Tên:")
