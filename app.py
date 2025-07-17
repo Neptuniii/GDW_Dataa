@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 from st_aggrid import AgGrid, GridOptionsBuilder
 
-# Đọc dữ liệu
 df = pd.read_csv("naphaluancod_2025-07-16.csv", usecols=[
     'governor_id', 'governor_name', 'historical_highest_power',
     'units_killed', 'units_dead', 'units_healed',
@@ -10,7 +9,6 @@ df = pd.read_csv("naphaluancod_2025-07-16.csv", usecols=[
     'tier_1_kills', 'tier_2_kills', 'tier_3_kills', 'tier_4_kills', 'tier_5_kills',
 ])
 
-# Đổi tên cột
 df = df.rename(columns={
     'governor_id': 'ID',
     'governor_name': 'Name',
@@ -30,19 +28,16 @@ df = df.rename(columns={
     'gems_spent': 'Gem spent'
 })
 
-# Tính phần trăm kill theo tier
 for tier in ['T1', 'T2', 'T3', 'T4', 'T5']:
     kill_col = f"{tier} kill"
     pct_col = f"{tier}/Total (%)"
     df[pct_col] = (df[kill_col] / df['Total kill'].replace(0, pd.NA)) * 100
     df[pct_col] = df[pct_col].round(2)
 
-# Giao diện
 st.set_page_config(layout="wide")
 st.title("GDW Data – Latest Update: 16/7/2025")
 st.title("By Neptuniii")
 
-# Tìm kiếm
 search = st.text_input("Tìm theo ID hoặc Tên:")
 if search:
     search_lower = search.lower()
@@ -56,7 +51,6 @@ else:
 filtered_df = filtered_df.reset_index(drop=True)
 filtered_df.index = filtered_df.index + 1
 
-# Tách dữ liệu thành từng phần
 general_cols = ['ID', 'Name', 'Highest Power', 'Total kill', 'Total dead', 'Total healed']
 resource_cols = ['Gold spent', 'Wood spent', 'Stone spent', 'Mana spent', 'Gem spent']
 kill_cols_ordered = []
@@ -68,12 +62,16 @@ df_general = filtered_df[general_cols]
 df_resources = filtered_df[['ID', 'Name'] + resource_cols]
 df_kills = filtered_df[['ID', 'Name', 'Total kill'] + kill_cols_ordered]
 
-# Hàm hiển thị AgGrid có định dạng
 def show_aggrid(df_to_show, height=400):
     gb = GridOptionsBuilder.from_dataframe(df_to_show)
 
     for col in df_to_show.columns:
-        if df_to_show[col].dtype.kind in 'iuf':  # số int/float
+        if col == "ID":
+            # Căn trái cho cột ID, không format số
+            gb.configure_column("ID", cellStyle={'textAlign': 'left'})
+            continue
+
+        if df_to_show[col].dtype.kind in 'iuf':  # kiểu số
             if "/Total (%)" in col:
                 gb.configure_column(
                     col,
@@ -86,10 +84,10 @@ def show_aggrid(df_to_show, height=400):
                     type=["numericColumn", "numberColumnFilter", "customNumericFormat"],
                     precision=0 if df_to_show[col].dtype.kind in 'iu' else 2,
                     valueFormatter="x.toLocaleString()")
+
     gridOptions = gb.build()
     AgGrid(df_to_show, gridOptions=gridOptions, height=height, fit_columns_on_grid_load=True)
 
-# Hiển thị từng phần
 st.subheader("🧮 Thông tin cơ bản")
 show_aggrid(df_general)
 
