@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 from st_aggrid import AgGrid, GridOptionsBuilder
-import matplotlib.pyplot as plt
 
 df = pd.read_csv("naphaluancod_2025-07-16.csv", usecols=[
     'governor_id', 'governor_name', 'historical_highest_power',
@@ -68,50 +67,26 @@ def show_aggrid(df_to_show, height=400):
 
     for col in df_to_show.columns:
         if col == "ID":
-            gb.configure_column(
-                "ID",
-                width=100,
-                cellStyle={'textAlign': 'left'}
-            )
-        elif col == "Name":
-            gb.configure_column("Name", width=200)
-        elif col == "Highest Power":
-            gb.configure_column("Highest Power", width=150, type=["numericColumn", "numberColumnFilter"], valueFormatter="x.toLocaleString()")
-        elif col == "Total kill":
-            gb.configure_column("Total kill", width=160, type=["numericColumn", "numberColumnFilter"], valueFormatter="x.toLocaleString()")
-elif col == "Total dead":
-            gb.configure_column("Total dead", width=150, type=["numericColumn", "numberColumnFilter"], valueFormatter="x.toLocaleString()")
-        elif col == "Total healed":
-            gb.configure_column("Total healed", width=160, type=["numericColumn", "numberColumnFilter"], valueFormatter="x.toLocaleString()")
-        elif "/Total (%)" in col:
-            gb.configure_column(
-                col,
-                width=130,
-                type=["numericColumn", "numberColumnFilter", "customNumericFormat"],
-                precision=2,
-                valueFormatter="x.toFixed(2) + '%'"
-            )
-        elif df_to_show[col].dtype.kind in 'iuf':
-            gb.configure_column(
-                col,
-                width=150,
-                type=["numericColumn", "numberColumnFilter", "customNumericFormat"],
-                precision=0 if df_to_show[col].dtype.kind in 'iu' else 2,
-                valueFormatter="x.toLocaleString()"
-            )
-        else:
-            gb.configure_column(col, width=150)
+            # Căn trái cho cột ID, không format số
+            gb.configure_column("ID", cellStyle={'textAlign': 'left'})
+            continue
+
+        if df_to_show[col].dtype.kind in 'iuf':  # kiểu số
+            if "/Total (%)" in col:
+                gb.configure_column(
+                    col,
+                    type=["numericColumn", "numberColumnFilter", "customNumericFormat"],
+                    precision=2,
+                    valueFormatter="x.toFixed(2) + '%'")
+            else:
+                gb.configure_column(
+                    col,
+                    type=["numericColumn", "numberColumnFilter", "customNumericFormat"],
+                    precision=0 if df_to_show[col].dtype.kind in 'iu' else 2,
+                    valueFormatter="x.toLocaleString()")
 
     gridOptions = gb.build()
-    AgGrid(
-        df_to_show,
-        gridOptions=gridOptions,
-        height=height,
-        fit_columns_on_grid_load=True,  # vẫn fit theo màn hình lớn
-        use_container_width=False,
-        allow_unsafe_jscode=True
-    )
-
+    AgGrid(df_to_show, gridOptions=gridOptions, height=height, fit_columns_on_grid_load=True)
 
 st.subheader("🧮 Thông tin cơ bản")
 show_aggrid(df_general)
