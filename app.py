@@ -64,53 +64,73 @@ df_resources = filtered_df[['ID', 'Name'] + resource_cols]
 df_kills = filtered_df[['ID', 'Name', 'Total kill'] + kill_cols_ordered]
 
 def show_aggrid(df_to_show, height=400):
+    from st_aggrid import GridOptionsBuilder, AgGrid
+    from streamlit import markdown
+
     gb = GridOptionsBuilder.from_dataframe(df_to_show)
 
     for col in df_to_show.columns:
         if col == "ID":
-            gb.configure_column(
-                "ID",
-                width=100,
-                cellStyle={'textAlign': 'left'}
-            )
+            gb.configure_column(col, width=90, cellStyle={'textAlign': 'left'})
         elif col == "Name":
-            gb.configure_column("Name", width=200)
+            gb.configure_column(col, width=180)
         elif col == "Highest Power":
-            gb.configure_column("Highest Power", width=150, type=["numericColumn", "numberColumnFilter"], valueFormatter="x.toLocaleString()")
+            gb.configure_column(col, width=140, type=["numericColumn", "numberColumnFilter"],
+                                valueFormatter="x.toLocaleString()")
         elif col == "Total kill":
-            gb.configure_column("Total kill", width=160, type=["numericColumn", "numberColumnFilter"], valueFormatter="x.toLocaleString()")
+            gb.configure_column(col, width=140, type=["numericColumn", "numberColumnFilter"],
+                                valueFormatter="x.toLocaleString()")
         elif col == "Total dead":
-            gb.configure_column("Total dead", width=150, type=["numericColumn", "numberColumnFilter"], valueFormatter="x.toLocaleString()")
+            gb.configure_column(col, width=130, type=["numericColumn", "numberColumnFilter"],
+                                valueFormatter="x.toLocaleString()")
         elif col == "Total healed":
-            gb.configure_column("Total healed", width=160, type=["numericColumn", "numberColumnFilter"], valueFormatter="x.toLocaleString()")
+            gb.configure_column(col, width=130, type=["numericColumn", "numberColumnFilter"],
+                                valueFormatter="x.toLocaleString()")
+        elif col == "Gold spent":
+            gb.configure_column(col, width=130, type=["numericColumn", "numberColumnFilter"],
+                                valueFormatter="x.toLocaleString()")
+        elif col == "Wood spent":
+            gb.configure_column(col, width=130, type=["numericColumn", "numberColumnFilter"],
+                                valueFormatter="x.toLocaleString()")
+        elif col == "Stone spent":
+            gb.configure_column(col, width=130, type=["numericColumn", "numberColumnFilter"],
+                                valueFormatter="x.toLocaleString()")
+        elif col == "Mana spent":
+            gb.configure_column(col, width=130, type=["numericColumn", "numberColumnFilter"],
+                                valueFormatter="x.toLocaleString()")
+        elif col == "Gem spent":
+            gb.configure_column(col, width=120, type=["numericColumn", "numberColumnFilter"],
+                                valueFormatter="x.toLocaleString()")
+        elif col in ["T1 kill", "T2 kill", "T3 kill", "T4 kill", "T5 kill"]:
+            gb.configure_column(col, width=110, type=["numericColumn", "numberColumnFilter"],
+                                valueFormatter="x.toLocaleString()")
         elif "/Total (%)" in col:
-            gb.configure_column(
-                col,
-                width=130,
-                type=["numericColumn", "numberColumnFilter", "customNumericFormat"],
-                precision=2,
-                valueFormatter="x.toFixed(2) + '%'"
-            )
-        elif df_to_show[col].dtype.kind in 'iuf':
-            gb.configure_column(
-                col,
-                width=150,
-                type=["numericColumn", "numberColumnFilter", "customNumericFormat"],
-                precision=0 if df_to_show[col].dtype.kind in 'iu' else 2,
-                valueFormatter="x.toLocaleString()"
-            )
+            gb.configure_column(col, width=115,
+                                type=["numericColumn", "numberColumnFilter", "customNumericFormat"],
+                                precision=2,
+                                valueFormatter="x.toFixed(2) + '%'")
         else:
-            gb.configure_column(col, width=150)
+            gb.configure_column(col, width=120)
 
     gridOptions = gb.build()
+
+    # 💡 Bọc AgGrid trong thẻ div scroll ngang
+    st.markdown("""
+        <div style='overflow-x: auto;'>
+    """, unsafe_allow_html=True)
+
     AgGrid(
         df_to_show,
         gridOptions=gridOptions,
         height=height,
-        fit_columns_on_grid_load=True,  # vẫn fit theo màn hình lớn
-        use_container_width=False,
-        allow_unsafe_jscode=True
+        fit_columns_on_grid_load=True,
+        use_container_width=False,  # ⚠️ Cực kỳ quan trọng: Không ép vừa container
+        allow_unsafe_jscode=True,
+        theme="streamlit"
     )
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
 
 
 st.subheader("🧮 Thông tin cơ bản")
