@@ -37,6 +37,7 @@ for tier in ['T1', 'T2', 'T3', 'T4', 'T5']:
 st.set_page_config(layout="wide")
 st.title("GDW Data – Latest Update: 16/7/2025")
 st.title("By Neptuniii")
+st.text("CHÚ Ý: Dễ xem nhất trên máy tính, điện thoại chưa tối uu")
 
 search = st.text_input("Tìm theo ID hoặc Tên:")
 if search:
