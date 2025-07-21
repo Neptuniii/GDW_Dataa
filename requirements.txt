@@ -2,3 +2,4 @@ streamlit
 pandas
 streamlit-aggrid
 matplotlib
+streamlit_js_eval
