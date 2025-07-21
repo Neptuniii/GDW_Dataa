@@ -97,7 +97,8 @@ title_map = {
     "diff": "⚔️ Trong SOS5 (Chênh lệch)"
 }
 st.title(f"GDW Data – {title_map[selected_file]}")
-if selected_file == file_after:
+# Xóa khi có dữ liệu thật
+if selected_file == file_after or selected_mode == "diff":
     st.markdown("*Đây là dữ liệu test, không có thật. \nTest với id = 11970924*")
 
 st.title("By Neptuniii")
