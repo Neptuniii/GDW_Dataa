@@ -129,6 +129,10 @@ df_kills = filtered_df[['ID', 'Name', 'Total kill'] + [col for col in kill_cols_
 
 def show_aggrid(df_to_show, height=400):
     gb = GridOptionsBuilder.from_dataframe(df_to_show)
+
+    # Thêm cột STT – luôn giữ đúng số dòng hiển thị bất kể sắp xếp/lọc
+    gb.configure_column("STT", header_name="STT", valueGetter="node.rowIndex + 1", width=70, pinned="left", sortable=False)
+
     for col in df_to_show.columns:
         if col == "ID":
             gb.configure_column("ID", width=90, cellStyle={'textAlign': 'left'})
@@ -153,11 +157,15 @@ def show_aggrid(df_to_show, height=400):
            fit_columns_on_grid_load=not is_mobile,
            allow_unsafe_jscode=True)
 
+
 st.subheader("🧮 Thông tin cơ bản")
+df_general.insert(0, "STT", None)
 show_aggrid(df_general)
 
 st.subheader("🪙 Tài nguyên đã tiêu")
+df_resources.insert(0, "STT", None)
 show_aggrid(df_resources)
 
 st.subheader("⚔️ Số lượng kill theo từng tier")
+df_kills.insert(0, "STT", None)
 show_aggrid(df_kills, height=500)
