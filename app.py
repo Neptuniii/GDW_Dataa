@@ -11,61 +11,95 @@ if resolution is None:
     st.stop()
 is_mobile = resolution < 768
 
-st.sidebar.header("📂 Chọn dữ liệu muốn xem")
-
 data_folder = "data"
-csv_files = [f for f in os.listdir(data_folder) if f.endswith(".csv")]
+file_before = "naphaluancod_2025-07-16.csv"
+file_after = "naphaluancod_2025-07-22.csv"
 
-if not csv_files:
-    st.error("Không tìm thấy file CSV trong thư mục `data/`.")
-    st.stop()
+st.subheader("📂 Chọn dữ liệu muốn xem")
+col1, col2 = st.columns([1, 4])  # col1 nhỏ hơn
+with col1:
+    selected_mode = st.selectbox(
+        "Chọn dữ liệu:",
+        options=["before", "after", "diff"],
+        format_func=lambda x: {
+            "before": "🔹 Trước SOS5",
+            "after": "🔸 Sau SOS5",
+            "diff": "⚔️ Trong SOS5 (Chênh lệch)"
+        }[x]
+    )
 
-display_names = {
-    "naphaluancod_2025-07-16.csv": "🔹 Trước SOS5",
-    "naphaluancod_2025-07-22.csv": "🔸 Sau SOS5"
-}
 
-csv_files = [f for f in csv_files if f in display_names]
+def preprocess(df):
+    df = df.rename(columns={
+        'governor_id': 'ID',
+        'governor_name': 'Name',
+        'historical_highest_power': 'Highest Power',
+        'units_killed': 'Total kill',
+        'units_dead': 'Total dead',
+        'units_healed': 'Total healed',
+        'tier_1_kills': 'T1 kill',
+        'tier_2_kills': 'T2 kill',
+        'tier_3_kills': 'T3 kill',
+        'tier_4_kills': 'T4 kill',
+        'tier_5_kills': 'T5 kill',
+        'gold_spent': 'Gold spent',
+        'wood_spent': 'Wood spent',
+        'stone_spent': 'Stone spent',
+        'mana_spent': 'Mana spent',
+        'gems_spent': 'Gem spent'
+    })
+    return df
 
-selected_file = st.sidebar.selectbox(
-    "Chọn dữ liệu :",
-    options=csv_files,
-    format_func=lambda x: display_names.get(x, x)
-)
+df_before = preprocess(pd.read_csv(os.path.join(data_folder, file_before)))
+df_after = preprocess(pd.read_csv(os.path.join(data_folder, file_after)))
 
-df = pd.read_csv(os.path.join(data_folder, selected_file), usecols=[
-    'governor_id', 'governor_name', 'historical_highest_power',
-    'units_killed', 'units_dead', 'units_healed',
-    'gold_spent', 'wood_spent', 'stone_spent', 'mana_spent', 'gems_spent',
-    'tier_1_kills', 'tier_2_kills', 'tier_3_kills', 'tier_4_kills', 'tier_5_kills',
-])
+if selected_mode == "before":
+    df = df_before.copy()
+    selected_file = file_before
+elif selected_mode == "after":
+    df = df_after.copy()
+    selected_file = file_after
+else:
+    selected_file = "diff"
+    df_merged = pd.merge(df_after, df_before, on="ID", suffixes=("_after", "_before"))
+    result = pd.DataFrame()
+    result["ID"] = df_merged["ID"]
+    result["Name"] = df_merged["Name_before"]  # Giữ tên từ file trước
 
-df = df.rename(columns={
-    'governor_id': 'ID',
-    'governor_name': 'Name',
-    'historical_highest_power': 'Highest Power',
-    'units_killed': 'Total kill',
-    'units_dead': 'Total dead',
-    'units_healed': 'Total healed',
-    'tier_1_kills': 'T1 kill',
-    'tier_2_kills': 'T2 kill',
-    'tier_3_kills': 'T3 kill',
-    'tier_4_kills': 'T4 kill',
-    'tier_5_kills': 'T5 kill',
-    'gold_spent': 'Gold spent',
-    'wood_spent': 'Wood spent',
-    'stone_spent': 'Stone spent',
-    'mana_spent': 'Mana spent',
-    'gems_spent': 'Gem spent'
-})
+    for col in df_after.columns:
+        if col in ["ID", "Name"]:
+            continue
+        if col in df_before.columns:
+            col_after = f"{col}_after"
+            col_before = f"{col}_before"
+            result[col] = pd.to_numeric(df_merged[col_after], errors="coerce") - \
+                          pd.to_numeric(df_merged[col_before], errors="coerce")
+
+    df = result
 
 for tier in ['T1', 'T2', 'T3', 'T4', 'T5']:
     kill_col = f"{tier} kill"
-    pct_col = f"{tier}/Total (%)"
-    df[pct_col] = (df[kill_col] / df['Total kill'].replace(0, pd.NA)) * 100
-    df[pct_col] = df[pct_col].round(2)
+    if kill_col in df.columns and "Total kill" in df.columns:
+        pct_col = f"{tier}/Total (%)"
+        df[kill_col] = pd.to_numeric(df[kill_col], errors='coerce')
+        df["Total kill"] = pd.to_numeric(df["Total kill"], errors='coerce')
 
-st.title(f"GDW Data – {display_names[selected_file]}")
+        df[pct_col] = df.apply(
+            lambda row: round((row[kill_col] / row["Total kill"] * 100), 2)
+            if pd.notna(row[kill_col]) and pd.notna(row["Total kill"]) and row["Total kill"] != 0
+            else None,
+            axis=1
+        )
+
+title_map = {
+    file_before: "🔹 Trước SOS5",
+    file_after: "🔸 Sau SOS5",
+    "diff": "⚔️ Trong SOS5 (Chênh lệch)"
+}
+st.title(f"GDW Data – {title_map[selected_file]}")
+if selected_file == file_after:
+    st.markdown("*Đây là dữ liệu test, không có thật. \nTest với id = 11970924*")
+
 st.title("By Neptuniii")
 
 search = st.text_input("🔍 Tìm theo ID hoặc Tên:")
@@ -79,7 +113,7 @@ else:
     filtered_df = df
 
 filtered_df = filtered_df.reset_index(drop=True)
-filtered_df.index = filtered_df.index + 1
+filtered_df.index += 1
 
 general_cols = ['ID', 'Name', 'Highest Power', 'Total kill', 'Total dead', 'Total healed']
 resource_cols = ['Gold spent', 'Wood spent', 'Stone spent', 'Mana spent', 'Gem spent']
@@ -88,20 +122,18 @@ for tier in ['T1', 'T2', 'T3', 'T4', 'T5']:
     kill_cols_ordered.append(f"{tier} kill")
     kill_cols_ordered.append(f"{tier}/Total (%)")
 
-df_general = filtered_df[general_cols]
-df_resources = filtered_df[['ID', 'Name'] + resource_cols]
-df_kills = filtered_df[['ID', 'Name', 'Total kill'] + kill_cols_ordered]
+df_general = filtered_df[[col for col in general_cols if col in filtered_df.columns]]
+df_resources = filtered_df[['ID', 'Name'] + [col for col in resource_cols if col in filtered_df.columns]]
+df_kills = filtered_df[['ID', 'Name', 'Total kill'] + [col for col in kill_cols_ordered if col in filtered_df.columns]]
 
 def show_aggrid(df_to_show, height=400):
     gb = GridOptionsBuilder.from_dataframe(df_to_show)
     for col in df_to_show.columns:
         if col == "ID":
             gb.configure_column("ID", width=90, cellStyle={'textAlign': 'left'})
-            continue
-        if col == "Name":
+        elif col == "Name":
             gb.configure_column("Name", width=160)
-            continue
-        if df_to_show[col].dtype.kind in 'iuf':
+        elif df_to_show[col].dtype.kind in 'iuf':
             if "/Total (%)" in col:
                 gb.configure_column(
                     col, type=["numericColumn", "numberColumnFilter", "customNumericFormat"],
