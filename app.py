@@ -24,7 +24,7 @@ with col1:
         format_func=lambda x: {
             "before": "🔹 Trước SOS5",
             "after": "🔸 Sau SOS5",
-            "diff": "⚔️ Trong SOS5 (Chênh lệch)"
+            "diff": "⚔️  SOS5"
         }[x]
     )
 
@@ -46,7 +46,11 @@ def preprocess(df):
         'wood_spent': 'Wood spent',
         'stone_spent': 'Stone spent',
         'mana_spent': 'Mana spent',
-        'gems_spent': 'Gem spent'
+        'gems_spent': 'Gem spent',
+        'gold_gathered': 'Gold gathered',
+        'wood_gathered': 'Wood gathered',
+        'ore_gathered': 'Ore gathered',
+        'mana_gathered': 'Mana gathered'
     })
     return df
 
@@ -127,6 +131,12 @@ df_general = filtered_df[[col for col in general_cols if col in filtered_df.colu
 df_resources = filtered_df[['ID', 'Name'] + [col for col in resource_cols if col in filtered_df.columns]]
 df_kills = filtered_df[['ID', 'Name', 'Total kill'] + [col for col in kill_cols_ordered if col in filtered_df.columns]]
 
+if selected_mode == "diff":
+    gather_cols = ['Gold gathered', 'Wood gathered', 'Ore gathered', 'Mana gathered']
+    df_gather = filtered_df[['ID', 'Name'] + [col for col in gather_cols if col in filtered_df.columns]]
+else:
+    df_gather = None
+
 def show_aggrid(df_to_show, height=400):
     gb = GridOptionsBuilder.from_dataframe(df_to_show)
 
@@ -169,3 +179,8 @@ show_aggrid(df_resources)
 st.subheader("⚔️ Số lượng kill theo từng tier")
 df_kills.insert(0, "STT", None)
 show_aggrid(df_kills, height=500)
+
+if df_gather is not None:
+    st.subheader("⛏️ Tài nguyên đã thu thập")
+    df_gather.insert(0, "STT", None)
+    show_aggrid(df_gather, height=400)
